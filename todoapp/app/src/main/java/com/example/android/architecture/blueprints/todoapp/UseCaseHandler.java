@@ -24,7 +24,7 @@ import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingRe
  */
 public class UseCaseHandler {
 
-    private static UseCaseHandler INSTANCE;
+    private static volatile UseCaseHandler instance;
 
     private final UseCaseScheduler mUseCaseScheduler;
 
@@ -32,10 +32,12 @@ public class UseCaseHandler {
         mUseCaseScheduler = useCaseScheduler;
     }
 
-    public <T extends UseCase.RequestValues, R extends UseCase.ResponseValue> void execute(
-            final UseCase<T, R> useCase, T values, UseCase.UseCaseCallback<R> callback) {
+    public <Q extends UseCase.RequestValues, P extends UseCase.ResponseValue, E extends UseCase.ErrorMessage> void execute(
+            final UseCase<Q, P, E> useCase, Q values, UseCase.SuccessCallback<P> successCallback, UseCase.ErrorCallback<E> errorCallback) {
+
         useCase.setRequestValues(values);
-        useCase.setUseCaseCallback(new UiCallbackWrapper(callback, this));
+        useCase.setSuccessCallback(new UiSuccessCallbackWrapper<P>(successCallback, this));
+        useCase.setErrorCallback(new UiErrorCallbackWrapper<E>(errorCallback, this));
 
         // The network request might be handled in a different thread so make sure
         // Espresso knows
@@ -57,42 +59,60 @@ public class UseCaseHandler {
         });
     }
 
-    public <V extends UseCase.ResponseValue> void notifyResponse(final V response,
-            final UseCase.UseCaseCallback<V> useCaseCallback) {
-        mUseCaseScheduler.notifyResponse(response, useCaseCallback);
+    public <P extends UseCase.ResponseValue> void notifyResponse(
+            final P response, final UseCase.SuccessCallback<P> successCallback) {
+        mUseCaseScheduler.notifyResponse(response, successCallback);
     }
 
-    private <V extends UseCase.ResponseValue> void notifyError(
-            final UseCase.UseCaseCallback<V> useCaseCallback) {
-        mUseCaseScheduler.onError(useCaseCallback);
+    public <E extends UseCase.ErrorMessage> void notifyError(
+            final E errorMessage, final UseCase.ErrorCallback<E> errorCallback) {
+        mUseCaseScheduler.onError(errorMessage, errorCallback);
     }
 
-    private static final class UiCallbackWrapper<V extends UseCase.ResponseValue> implements
-            UseCase.UseCaseCallback<V> {
-        private final UseCase.UseCaseCallback<V> mCallback;
+    private static final class UiSuccessCallbackWrapper<P extends UseCase.ResponseValue>
+            implements UseCase.SuccessCallback<P> {
+
+        private final UseCase.SuccessCallback<P> mCallback;
         private final UseCaseHandler mUseCaseHandler;
 
-        public UiCallbackWrapper(UseCase.UseCaseCallback<V> callback,
-                UseCaseHandler useCaseHandler) {
-            mCallback = callback;
-            mUseCaseHandler = useCaseHandler;
+        public UiSuccessCallbackWrapper(UseCase.SuccessCallback<P> mCallback,
+                                        UseCaseHandler mUseCaseHandler) {
+            this.mCallback = mCallback;
+            this.mUseCaseHandler = mUseCaseHandler;
         }
 
         @Override
-        public void onSuccess(V response) {
+        public void onSuccess(P response) {
             mUseCaseHandler.notifyResponse(response, mCallback);
         }
+    }
+
+    private static final class UiErrorCallbackWrapper<E extends UseCase.ErrorMessage>
+            implements UseCase.ErrorCallback<E> {
+
+        private final UseCase.ErrorCallback<E> mCallback;
+        private final UseCaseHandler mUseCaseHandler;
+
+        public UiErrorCallbackWrapper(UseCase.ErrorCallback<E> mCallback,
+                                      UseCaseHandler mUseCaseHandler) {
+            this.mCallback = mCallback;
+            this.mUseCaseHandler = mUseCaseHandler;
+        }
 
         @Override
-        public void onError() {
-            mUseCaseHandler.notifyError(mCallback);
+        public void onError(E errorMessage) {
+            mUseCaseHandler.notifyError(errorMessage, mCallback);
         }
     }
 
     public static UseCaseHandler getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new UseCaseHandler(new UseCaseThreadPoolScheduler());
+        if (instance == null) {
+            synchronized (UseCaseHandler.class) {
+                if (instance == null) {
+                    instance = new UseCaseHandler(new UseCaseThreadPoolScheduler());
+                }
+            }
         }
-        return INSTANCE;
+        return instance;
     }
 }

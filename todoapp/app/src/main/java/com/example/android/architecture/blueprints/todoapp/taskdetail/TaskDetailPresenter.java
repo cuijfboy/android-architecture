@@ -47,12 +47,12 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
     private String mTaskId;
 
     public TaskDetailPresenter(@NonNull UseCaseHandler useCaseHandler,
-            @Nullable String taskId,
-            @NonNull TaskDetailContract.View taskDetailView,
-            @NonNull GetTask getTask,
-            @NonNull CompleteTask completeTask,
-            @NonNull ActivateTask activateTask,
-            @NonNull DeleteTask deleteTask) {
+                               @Nullable String taskId,
+                               @NonNull TaskDetailContract.View taskDetailView,
+                               @NonNull GetTask getTask,
+                               @NonNull CompleteTask completeTask,
+                               @NonNull ActivateTask activateTask,
+                               @NonNull DeleteTask deleteTask) {
         mTaskId = taskId;
         mUseCaseHandler = checkNotNull(useCaseHandler, "useCaseHandler cannot be null!");
         mTaskDetailView = checkNotNull(taskDetailView, "taskDetailView cannot be null!");
@@ -77,27 +77,21 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
         mTaskDetailView.setLoadingIndicator(true);
 
         mUseCaseHandler.execute(mGetTask, new GetTask.RequestValues(mTaskId),
-                new UseCase.UseCaseCallback<GetTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(GetTask.ResponseValue response) {
-                        Task task = response.getTask();
+                response -> {
+                    Task task = response.getTask();
 
-                        // The view may not be able to handle UI updates anymore
-                        if (!mTaskDetailView.isActive()) {
-                            return;
-                        }
-                        mTaskDetailView.setLoadingIndicator(false);
-                        showTask(task);
+                    // The view may not be able to handle UI updates anymore
+                    if (!mTaskDetailView.isActive()) {
+                        return;
                     }
-
-                    @Override
-                    public void onError() {
-                        // The view may not be able to handle UI updates anymore
-                        if (!mTaskDetailView.isActive()) {
-                            return;
-                        }
-                        mTaskDetailView.showMissingTask();
+                    mTaskDetailView.setLoadingIndicator(false);
+                    showTask(task);
+                }, error -> {
+                    // The view may not be able to handle UI updates anymore
+                    if (!mTaskDetailView.isActive()) {
+                        return;
                     }
+                    mTaskDetailView.showMissingTask();
                 });
     }
 
@@ -113,17 +107,8 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
     @Override
     public void deleteTask() {
         mUseCaseHandler.execute(mDeleteTask, new DeleteTask.RequestValues(mTaskId),
-                new UseCase.UseCaseCallback<DeleteTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(DeleteTask.ResponseValue response) {
-                        mTaskDetailView.showTaskDeleted();
-                    }
-
-                    @Override
-                    public void onError() {
-                        // Show error, log, etc.
-                    }
-                });
+                response -> mTaskDetailView.showTaskDeleted(),
+                UseCase.emptyErrorMessage());
     }
 
     @Override
@@ -134,17 +119,8 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
         }
 
         mUseCaseHandler.execute(mCompleteTask, new CompleteTask.RequestValues(mTaskId),
-                new UseCase.UseCaseCallback<CompleteTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(CompleteTask.ResponseValue response) {
-                        mTaskDetailView.showTaskMarkedComplete();
-                    }
-
-                    @Override
-                    public void onError() {
-                        // Show error, log, etc.
-                    }
-                });
+                response -> mTaskDetailView.showTaskMarkedComplete(),
+                UseCase.emptyErrorMessage());
     }
 
     @Override
@@ -154,17 +130,8 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
             return;
         }
         mUseCaseHandler.execute(mActivateTask, new ActivateTask.RequestValues(mTaskId),
-                new UseCase.UseCaseCallback<ActivateTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(ActivateTask.ResponseValue response) {
-                        mTaskDetailView.showTaskMarkedActive();
-                    }
-
-                    @Override
-                    public void onError() {
-                        // Show error, log, etc.
-                    }
-                });
+                response -> mTaskDetailView.showTaskMarkedActive(),
+                UseCase.emptyErrorMessage());
     }
 
     private void showTask(@NonNull Task task) {

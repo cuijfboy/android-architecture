@@ -16,19 +16,19 @@
 
 package com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Retrieves a {@link Task} from the {@link TasksRepository}.
  */
-public class GetTask extends UseCase<GetTask.RequestValues, GetTask.ResponseValue> {
+public class GetTask extends UseCase<GetTask.RequestValues, GetTask.ResponseValue, UseCase.Void> {
 
     private final TasksRepository mTasksRepository;
 
@@ -43,15 +43,15 @@ public class GetTask extends UseCase<GetTask.RequestValues, GetTask.ResponseValu
             public void onTaskLoaded(Task task) {
                 if (task != null) {
                     ResponseValue responseValue = new ResponseValue(task);
-                    getUseCaseCallback().onSuccess(responseValue);
+                    getSuccessCallback().onSuccess(responseValue);
                 } else {
-                    getUseCaseCallback().onError();
+                    getErrorCallback().onError(EMPTY_RESPONSE_VALUE);
                 }
             }
 
             @Override
             public void onDataNotAvailable() {
-                getUseCaseCallback().onError();
+                getErrorCallback().onError(EMPTY_RESPONSE_VALUE);
             }
         });
     }

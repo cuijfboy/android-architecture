@@ -16,14 +16,14 @@
 
 package com.example.android.architecture.blueprints.todoapp.statistics;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
-import com.example.android.architecture.blueprints.todoapp.statistics.domain.usecase.GetStatistics;
 import com.example.android.architecture.blueprints.todoapp.statistics.domain.model.Statistics;
+import com.example.android.architecture.blueprints.todoapp.statistics.domain.usecase.GetStatistics;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Listens to user actions from the UI ({@link StatisticsFragment}), retrieves the data and updates
@@ -41,7 +41,7 @@ public class StatisticsPresenter implements StatisticsContract.Presenter {
             @NonNull GetStatistics getStatistics) {
         mUseCaseHandler = checkNotNull(useCaseHandler, "useCaseHandler cannot be null!");
         mStatisticsView = checkNotNull(statisticsView, "StatisticsView cannot be null!");
-        mGetStatistics = checkNotNull(getStatistics,"getStatistics cannot be null!");
+        mGetStatistics = checkNotNull(getStatistics, "getStatistics cannot be null!");
 
         mStatisticsView.setPresenter(this);
     }
@@ -54,28 +54,23 @@ public class StatisticsPresenter implements StatisticsContract.Presenter {
     private void loadStatistics() {
         mStatisticsView.setProgressIndicator(true);
 
-        mUseCaseHandler.execute(mGetStatistics, new GetStatistics.RequestValues(),
-                new UseCase.UseCaseCallback<GetStatistics.ResponseValue>() {
-            @Override
-            public void onSuccess(GetStatistics.ResponseValue response) {
-                Statistics statistics = response.getStatistics();
-                // The view may not be able to handle UI updates anymore
-                if (!mStatisticsView.isActive()) {
-                    return;
-                }
-                mStatisticsView.setProgressIndicator(false);
+        mUseCaseHandler.execute(mGetStatistics, UseCase.EMPTY_REQUEST_VALUES,
+                response -> {
+                    Statistics statistics = response.getStatistics();
+                    // The view may not be able to handle UI updates anymore
+                    if (!mStatisticsView.isActive()) {
+                        return;
+                    }
+                    mStatisticsView.setProgressIndicator(false);
 
-                mStatisticsView.showStatistics(statistics.getActiveTasks(), statistics.getCompletedTasks());
-            }
-
-            @Override
-            public void onError() {
-                // The view may not be able to handle UI updates anymore
-                if (!mStatisticsView.isActive()) {
-                    return;
-                }
-                mStatisticsView.showLoadingStatisticsError();
-            }
-        });
+                    mStatisticsView.showStatistics(statistics.getActiveTasks(), statistics.getCompletedTasks());
+                },
+                error -> {
+                    // The view may not be able to handle UI updates anymore
+                    if (!mStatisticsView.isActive()) {
+                        return;
+                    }
+                    mStatisticsView.showLoadingStatisticsError();
+                });
     }
 }

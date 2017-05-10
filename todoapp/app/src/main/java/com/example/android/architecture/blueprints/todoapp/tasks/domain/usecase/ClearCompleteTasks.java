@@ -26,8 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Deletes tasks marked as completed.
  */
-public class ClearCompleteTasks
-        extends UseCase<ClearCompleteTasks.RequestValues, ClearCompleteTasks.ResponseValue> {
+public class ClearCompleteTasks extends UseCase<UseCase.Void, UseCase.Void, UseCase.Void> {
 
     private final TasksRepository mTasksRepository;
 
@@ -36,12 +35,9 @@ public class ClearCompleteTasks
     }
 
     @Override
-    protected void executeUseCase(final RequestValues values) {
+    protected void executeUseCase(final UseCase.Void values) {
         mTasksRepository.clearCompletedTasks();
-        getUseCaseCallback().onSuccess(new ResponseValue());
+        getSuccessCallback().onSuccess(UseCase.EMPTY_RESPONSE_VALUE);
     }
 
-    public static class RequestValues implements UseCase.RequestValues { }
-
-    public static class ResponseValue implements UseCase.ResponseValue { }
 }

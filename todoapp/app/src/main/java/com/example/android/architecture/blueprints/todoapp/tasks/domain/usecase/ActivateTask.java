@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Marks a task as active (not completed yet).
  */
-public class ActivateTask extends UseCase<ActivateTask.RequestValues, ActivateTask.ResponseValue> {
+public class ActivateTask extends UseCase<ActivateTask.RequestValues, UseCase.Void, UseCase.Void> {
 
     private final TasksRepository mTasksRepository;
 
@@ -38,7 +38,7 @@ public class ActivateTask extends UseCase<ActivateTask.RequestValues, ActivateTa
     protected void executeUseCase(final RequestValues values) {
         String activeTask = values.getActivateTask();
         mTasksRepository.activateTask(activeTask);
-        getUseCaseCallback().onSuccess(new ResponseValue());
+        getSuccessCallback().onSuccess(UseCase.EMPTY_RESPONSE_VALUE);
     }
 
     public static final class RequestValues implements UseCase.RequestValues {
@@ -54,5 +54,4 @@ public class ActivateTask extends UseCase<ActivateTask.RequestValues, ActivateTa
         }
     }
 
-    public static final class ResponseValue implements UseCase.ResponseValue { }
 }

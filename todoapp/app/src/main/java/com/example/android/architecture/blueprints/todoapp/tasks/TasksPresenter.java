@@ -16,22 +16,22 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.ActivateTask;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.ClearCompleteTasks;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.CompleteTask;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.GetTasks;
 
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Listens to user actions from the UI ({@link TasksFragment}), retrieves the data and updates the
@@ -53,9 +53,9 @@ public class TasksPresenter implements TasksContract.Presenter {
     private final UseCaseHandler mUseCaseHandler;
 
     public TasksPresenter(@NonNull UseCaseHandler useCaseHandler,
-            @NonNull TasksContract.View tasksView, @NonNull GetTasks getTasks,
-            @NonNull CompleteTask completeTask, @NonNull ActivateTask activateTask,
-            @NonNull ClearCompleteTasks clearCompleteTasks) {
+                          @NonNull TasksContract.View tasksView, @NonNull GetTasks getTasks,
+                          @NonNull CompleteTask completeTask, @NonNull ActivateTask activateTask,
+                          @NonNull ClearCompleteTasks clearCompleteTasks) {
         mUseCaseHandler = checkNotNull(useCaseHandler, "usecaseHandler cannot be null");
         mTasksView = checkNotNull(tasksView, "tasksView cannot be null!");
         mGetTasks = checkNotNull(getTasks, "getTask cannot be null!");
@@ -102,29 +102,24 @@ public class TasksPresenter implements TasksContract.Presenter {
                 mCurrentFiltering);
 
         mUseCaseHandler.execute(mGetTasks, requestValue,
-                new UseCase.UseCaseCallback<GetTasks.ResponseValue>() {
-                    @Override
-                    public void onSuccess(GetTasks.ResponseValue response) {
-                        List<Task> tasks = response.getTasks();
-                        // The view may not be able to handle UI updates anymore
-                        if (!mTasksView.isActive()) {
-                            return;
-                        }
-                        if (showLoadingUI) {
-                            mTasksView.setLoadingIndicator(false);
-                        }
-
-                        processTasks(tasks);
+                response -> {
+                    List<Task> tasks = response.getTasks();
+                    // The view may not be able to handle UI updates anymore
+                    if (!mTasksView.isActive()) {
+                        return;
+                    }
+                    if (showLoadingUI) {
+                        mTasksView.setLoadingIndicator(false);
                     }
 
-                    @Override
-                    public void onError() {
-                        // The view may not be able to handle UI updates anymore
-                        if (!mTasksView.isActive()) {
-                            return;
-                        }
-                        mTasksView.showLoadingTasksError();
+                    processTasks(tasks);
+                },
+                error -> {
+                    // The view may not be able to handle UI updates anymore
+                    if (!mTasksView.isActive()) {
+                        return;
                     }
+                    mTasksView.showLoadingTasksError();
                 });
     }
 
@@ -182,55 +177,30 @@ public class TasksPresenter implements TasksContract.Presenter {
     @Override
     public void completeTask(@NonNull Task completedTask) {
         checkNotNull(completedTask, "completedTask cannot be null!");
-        mUseCaseHandler.execute(mCompleteTask, new CompleteTask.RequestValues(
-                        completedTask.getId()),
-                new UseCase.UseCaseCallback<CompleteTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(CompleteTask.ResponseValue response) {
-                        mTasksView.showTaskMarkedComplete();
-                        loadTasks(false, false);
-                    }
-
-                    @Override
-                    public void onError() {
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
+        mUseCaseHandler.execute(mCompleteTask, new CompleteTask.RequestValues(completedTask.getId()),
+                response -> {
+                    mTasksView.showTaskMarkedComplete();
+                    loadTasks(false, false);
+                }, error -> mTasksView.showLoadingTasksError());
     }
 
     @Override
     public void activateTask(@NonNull Task activeTask) {
         checkNotNull(activeTask, "activeTask cannot be null!");
         mUseCaseHandler.execute(mActivateTask, new ActivateTask.RequestValues(activeTask.getId()),
-                new UseCase.UseCaseCallback<ActivateTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(ActivateTask.ResponseValue response) {
-                        mTasksView.showTaskMarkedActive();
-                        loadTasks(false, false);
-                    }
-
-                    @Override
-                    public void onError() {
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
+                response -> {
+                    mTasksView.showTaskMarkedActive();
+                    loadTasks(false, false);
+                }, error -> mTasksView.showLoadingTasksError());
     }
 
     @Override
     public void clearCompletedTasks() {
-        mUseCaseHandler.execute(mClearCompleteTasks, new ClearCompleteTasks.RequestValues(),
-                new UseCase.UseCaseCallback<ClearCompleteTasks.ResponseValue>() {
-                    @Override
-                    public void onSuccess(ClearCompleteTasks.ResponseValue response) {
-                        mTasksView.showCompletedTasksCleared();
-                        loadTasks(false, false);
-                    }
-
-                    @Override
-                    public void onError() {
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
+        mUseCaseHandler.execute(mClearCompleteTasks, UseCase.EMPTY_REQUEST_VALUES,
+                response -> {
+                    mTasksView.showCompletedTasksCleared();
+                    loadTasks(false, false);
+                }, error -> mTasksView.showLoadingTasksError());
     }
 
     /**

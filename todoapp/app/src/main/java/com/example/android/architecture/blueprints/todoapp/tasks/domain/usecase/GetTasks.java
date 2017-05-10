@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Fetches the list of tasks.
  */
-public class GetTasks extends UseCase<GetTasks.RequestValues, GetTasks.ResponseValue> {
+public class GetTasks extends UseCase<GetTasks.RequestValues, GetTasks.ResponseValue, UseCase.Void> {
 
     private final TasksRepository mTasksRepository;
 
@@ -58,12 +58,12 @@ public class GetTasks extends UseCase<GetTasks.RequestValues, GetTasks.ResponseV
 
                 List<Task> tasksFiltered = taskFilter.filter(tasks);
                 ResponseValue responseValue = new ResponseValue(tasksFiltered);
-                getUseCaseCallback().onSuccess(responseValue);
+                getSuccessCallback().onSuccess(responseValue);
             }
 
             @Override
             public void onDataNotAvailable() {
-                getUseCaseCallback().onError();
+                getErrorCallback().onError(EMPTY_RESPONSE_VALUE);
             }
         });
 

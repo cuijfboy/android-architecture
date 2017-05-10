@@ -26,14 +26,14 @@ public class TestUseCaseScheduler implements UseCaseScheduler {
     }
 
     @Override
-    public <R extends UseCase.ResponseValue> void notifyResponse(R response,
-            UseCase.UseCaseCallback<R> useCaseCallback) {
-        useCaseCallback.onSuccess(response);
+    public <P extends UseCase.ResponseValue> void notifyResponse(
+            P response, UseCase.SuccessCallback<P> successCallback) {
+        successCallback.onSuccess(response);
     }
 
     @Override
-    public <R extends UseCase.ResponseValue> void onError(
-            UseCase.UseCaseCallback<R> useCaseCallback) {
-        useCaseCallback.onError();
+    public <E extends UseCase.ErrorMessage> void onError(
+            E errorMessage, UseCase.ErrorCallback<E> errorCallback) {
+        errorCallback.onError(errorMessage);
     }
 }

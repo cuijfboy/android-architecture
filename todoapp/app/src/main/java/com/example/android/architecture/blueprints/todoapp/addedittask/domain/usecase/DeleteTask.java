@@ -19,15 +19,15 @@ package com.example.android.architecture.blueprints.todoapp.addedittask.domain.u
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Deletes a {@link Task} from the {@link TasksRepository}.
  */
-public class DeleteTask extends UseCase<DeleteTask.RequestValues, DeleteTask.ResponseValue> {
+public class DeleteTask extends UseCase<DeleteTask.RequestValues, UseCase.Void, UseCase.Void> {
 
     private final TasksRepository mTasksRepository;
 
@@ -38,7 +38,7 @@ public class DeleteTask extends UseCase<DeleteTask.RequestValues, DeleteTask.Res
     @Override
     protected void executeUseCase(final RequestValues values) {
         mTasksRepository.deleteTask(values.getTaskId());
-        getUseCaseCallback().onSuccess(new ResponseValue());
+        getSuccessCallback().onSuccess(UseCase.EMPTY_RESPONSE_VALUE);
     }
 
     public static final class RequestValues implements UseCase.RequestValues {
@@ -52,6 +52,4 @@ public class DeleteTask extends UseCase<DeleteTask.RequestValues, DeleteTask.Res
             return mTaskId;
         }
     }
-
-    public static final class ResponseValue implements UseCase.ResponseValue { }
 }
