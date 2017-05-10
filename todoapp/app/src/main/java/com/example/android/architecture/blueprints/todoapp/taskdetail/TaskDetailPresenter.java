@@ -19,7 +19,6 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.DeleteTask;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.GetTask;
@@ -107,8 +106,7 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
     @Override
     public void deleteTask() {
         mUseCaseHandler.execute(mDeleteTask, new DeleteTask.RequestValues(mTaskId),
-                response -> mTaskDetailView.showTaskDeleted(),
-                UseCase.emptyErrorMessage());
+                response -> mTaskDetailView.showTaskDeleted());
     }
 
     @Override
@@ -119,8 +117,7 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
         }
 
         mUseCaseHandler.execute(mCompleteTask, new CompleteTask.RequestValues(mTaskId),
-                response -> mTaskDetailView.showTaskMarkedComplete(),
-                UseCase.emptyErrorMessage());
+                response -> mTaskDetailView.showTaskMarkedComplete());
     }
 
     @Override
@@ -130,8 +127,7 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
             return;
         }
         mUseCaseHandler.execute(mActivateTask, new ActivateTask.RequestValues(mTaskId),
-                response -> mTaskDetailView.showTaskMarkedActive(),
-                UseCase.emptyErrorMessage());
+                response -> mTaskDetailView.showTaskMarkedActive());
     }
 
     private void showTask(@NonNull Task task) {

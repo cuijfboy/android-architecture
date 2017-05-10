@@ -16,24 +16,25 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.support.annotation.NonNull;
 
+import com.example.android.architecture.blueprints.todoapp.SimpleUseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.tasks.TasksFilterType;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.filter.FilterFactory;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.filter.TaskFilter;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Fetches the list of tasks.
  */
-public class GetTasks extends UseCase<GetTasks.RequestValues, GetTasks.ResponseValue, UseCase.Void> {
+public class GetTasks extends SimpleUseCase<GetTasks.RequestValues, GetTasks.ResponseValue> {
 
     private final TasksRepository mTasksRepository;
 
@@ -58,12 +59,12 @@ public class GetTasks extends UseCase<GetTasks.RequestValues, GetTasks.ResponseV
 
                 List<Task> tasksFiltered = taskFilter.filter(tasks);
                 ResponseValue responseValue = new ResponseValue(tasksFiltered);
-                getSuccessCallback().onSuccess(responseValue);
+                getSuccessCallback().call(responseValue);
             }
 
             @Override
             public void onDataNotAvailable() {
-                getErrorCallback().onError(EMPTY_RESPONSE_VALUE);
+                getErrorCallback().call(EMPTY_RESPONSE_VALUE);
             }
         });
 

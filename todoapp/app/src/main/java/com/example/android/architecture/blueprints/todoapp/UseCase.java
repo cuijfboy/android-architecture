@@ -22,13 +22,19 @@ package com.example.android.architecture.blueprints.todoapp;
  * @param <Q> the request type
  * @param <P> the response type
  * @param <E> the error message type
+ * @param <G> the progress type
  */
-public abstract class UseCase<Q extends UseCase.RequestValues, P extends UseCase.ResponseValue, E extends UseCase.ErrorMessage> {
+public abstract class UseCase<
+        Q extends UseCase.RequestValues,
+        P extends UseCase.ResponseValue,
+        E extends UseCase.ErrorMessage,
+        G extends UseCase.ProgressValue> {
 
     private Q mRequestValues;
 
-    private SuccessCallback<P> mSuccessCallback;
-    private ErrorCallback<E> mErrorCallback;
+    private Callback<P> mSuccessCallback;
+    private Callback<E> mErrorCallback;
+    private Callback<G> mProgressCallback;
 
     public void setRequestValues(Q requestValues) {
         mRequestValues = requestValues;
@@ -38,20 +44,28 @@ public abstract class UseCase<Q extends UseCase.RequestValues, P extends UseCase
         return mRequestValues;
     }
 
-    public SuccessCallback<P> getSuccessCallback() {
+    public Callback<P> getSuccessCallback() {
         return mSuccessCallback;
     }
 
-    public void setSuccessCallback(SuccessCallback<P> mSuccessCallback) {
-        this.mSuccessCallback = mSuccessCallback;
+    public void setSuccessCallback(Callback<P> successCallback) {
+        this.mSuccessCallback = successCallback;
     }
 
-    public ErrorCallback<E> getErrorCallback() {
+    public Callback<E> getErrorCallback() {
         return mErrorCallback;
     }
 
-    public void setErrorCallback(ErrorCallback<E> mErrorCallback) {
-        this.mErrorCallback = mErrorCallback;
+    public void setErrorCallback(Callback<E> errorCallback) {
+        this.mErrorCallback = errorCallback;
+    }
+
+    public Callback<G> getProgressCallback() {
+        return mProgressCallback;
+    }
+
+    public void setmProgressCallback(Callback<G> progressCallback) {
+        this.mProgressCallback = progressCallback;
     }
 
     void run() {
@@ -73,44 +87,33 @@ public abstract class UseCase<Q extends UseCase.RequestValues, P extends UseCase
     }
 
     /**
-     * Data received from a error.
+     * Data received in progress.
+     */
+    public interface ProgressValue {
+    }
+
+    /**
+     * Data received from an error.
      */
     public interface ErrorMessage {
     }
 
-    public interface SuccessCallback<P extends UseCase.ResponseValue> {
-        void onSuccess(P response);
+    public interface Callback<V> {
+        void call(V value);
     }
 
-    public interface ErrorCallback<E extends UseCase.ErrorMessage> {
-        void onError(E error);
-    }
-
-    public static final SuccessCallback<UseCase.ResponseValue> EMPTY_SUCCESS_CALLBACK =
-            new SuccessCallback<ResponseValue>() {
-                @Override
-                public void onSuccess(ResponseValue response) {
-                }
-            };
+    public static final Callback EMPTY_CALLBACK = new Callback() {
+        @Override
+        public void call(Object value) {
+        }
+    };
 
     @SuppressWarnings("unchecked")
-    public static <P extends UseCase.ResponseValue> SuccessCallback<P> emptySuccessCallback() {
-        return (SuccessCallback<P>) EMPTY_SUCCESS_CALLBACK;
+    public static <V> Callback<V> emptyCallback() {
+        return (Callback<V>) EMPTY_CALLBACK;
     }
 
-    public static final ErrorCallback<UseCase.ErrorMessage> EMPTY_ERROR_CALLBACK =
-            new ErrorCallback<ErrorMessage>() {
-                @Override
-                public void onError(ErrorMessage error) {
-                }
-            };
-
-    @SuppressWarnings("unchecked")
-    public static <E extends UseCase.ErrorMessage> ErrorCallback<E> emptyErrorMessage() {
-        return (ErrorCallback<E>) EMPTY_ERROR_CALLBACK;
-    }
-
-    public static class Void implements RequestValues, ResponseValue, ErrorMessage {
+    public static class Void implements RequestValues, ResponseValue, ErrorMessage, ProgressValue {
     }
 
     public static final Void EMPTY_REQUEST_VALUES = new Void() {
@@ -134,5 +137,12 @@ public abstract class UseCase<Q extends UseCase.RequestValues, P extends UseCase
         }
     };
 
+    public static final Void EMPTY_PROGRESS_VALUE = new Void() {
+        @Override
+        public String toString() {
+            return "EMPTY_PROGRESS_VALUE";
+        }
+    };
 
 }
+

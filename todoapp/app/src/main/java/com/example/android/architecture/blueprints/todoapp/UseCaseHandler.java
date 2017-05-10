@@ -32,12 +32,34 @@ public class UseCaseHandler {
         mUseCaseScheduler = useCaseScheduler;
     }
 
+    public <Q extends UseCase.RequestValues, P extends UseCase.ResponseValue> void execute(
+            final UseCase<Q, P, UseCase.Void, UseCase.Void> useCase,
+            Q values,
+            UseCase.Callback<P> successCallback) {
+
+        execute(useCase, values, successCallback, UseCase.emptyCallback(), UseCase.emptyCallback());
+    }
+
     public <Q extends UseCase.RequestValues, P extends UseCase.ResponseValue, E extends UseCase.ErrorMessage> void execute(
-            final UseCase<Q, P, E> useCase, Q values, UseCase.SuccessCallback<P> successCallback, UseCase.ErrorCallback<E> errorCallback) {
+            final UseCase<Q, P, E, UseCase.Void> useCase,
+            Q values,
+            UseCase.Callback<P> successCallback,
+            UseCase.Callback<E> errorCallback) {
+
+        execute(useCase, values, successCallback, errorCallback, UseCase.emptyCallback());
+    }
+
+    public <Q extends UseCase.RequestValues, P extends UseCase.ResponseValue, E extends UseCase.ErrorMessage, G extends UseCase.ProgressValue> void execute(
+            final UseCase<Q, P, E, G> useCase,
+            Q values,
+            UseCase.Callback<P> successCallback,
+            UseCase.Callback<E> errorCallback,
+            UseCase.Callback<G> progressCallback) {
 
         useCase.setRequestValues(values);
-        useCase.setSuccessCallback(new UiSuccessCallbackWrapper<P>(successCallback, this));
-        useCase.setErrorCallback(new UiErrorCallbackWrapper<E>(errorCallback, this));
+        useCase.setSuccessCallback(new UiSuccessCallbackWrapper<>(successCallback, this));
+        useCase.setErrorCallback(new UiErrorCallbackWrapper<>(errorCallback, this));
+        useCase.setmProgressCallback(new UiProgressCallbackWrapper<>(progressCallback, this));
 
         // The network request might be handled in a different thread so make sure
         // Espresso knows
@@ -60,48 +82,71 @@ public class UseCaseHandler {
     }
 
     public <P extends UseCase.ResponseValue> void notifyResponse(
-            final P response, final UseCase.SuccessCallback<P> successCallback) {
+            final P response, final UseCase.Callback<P> successCallback) {
         mUseCaseScheduler.notifyResponse(response, successCallback);
     }
 
     public <E extends UseCase.ErrorMessage> void notifyError(
-            final E errorMessage, final UseCase.ErrorCallback<E> errorCallback) {
+            final E errorMessage, final UseCase.Callback<E> errorCallback) {
         mUseCaseScheduler.onError(errorMessage, errorCallback);
     }
 
-    private static final class UiSuccessCallbackWrapper<P extends UseCase.ResponseValue>
-            implements UseCase.SuccessCallback<P> {
+    public <G extends UseCase.ProgressValue> void notifyProgress(
+            final G progress, final UseCase.Callback<G> progressCallback) {
+        mUseCaseScheduler.notifyProgress(progress, progressCallback);
+    }
 
-        private final UseCase.SuccessCallback<P> mCallback;
+    private static final class UiSuccessCallbackWrapper<P extends UseCase.ResponseValue>
+            implements UseCase.Callback<P> {
+
+        private final UseCase.Callback<P> mCallback;
         private final UseCaseHandler mUseCaseHandler;
 
-        public UiSuccessCallbackWrapper(UseCase.SuccessCallback<P> mCallback,
+        public UiSuccessCallbackWrapper(UseCase.Callback<P> mCallback,
                                         UseCaseHandler mUseCaseHandler) {
             this.mCallback = mCallback;
             this.mUseCaseHandler = mUseCaseHandler;
         }
 
         @Override
-        public void onSuccess(P response) {
+        public void call(P response) {
             mUseCaseHandler.notifyResponse(response, mCallback);
         }
     }
 
     private static final class UiErrorCallbackWrapper<E extends UseCase.ErrorMessage>
-            implements UseCase.ErrorCallback<E> {
+            implements UseCase.Callback<E> {
 
-        private final UseCase.ErrorCallback<E> mCallback;
+        private final UseCase.Callback<E> mCallback;
         private final UseCaseHandler mUseCaseHandler;
 
-        public UiErrorCallbackWrapper(UseCase.ErrorCallback<E> mCallback,
+        public UiErrorCallbackWrapper(UseCase.Callback<E> mCallback,
                                       UseCaseHandler mUseCaseHandler) {
             this.mCallback = mCallback;
             this.mUseCaseHandler = mUseCaseHandler;
         }
 
         @Override
-        public void onError(E errorMessage) {
+        public void call(E errorMessage) {
             mUseCaseHandler.notifyError(errorMessage, mCallback);
+        }
+    }
+
+    private static final class UiProgressCallbackWrapper<G extends UseCase.ProgressValue>
+            implements UseCase.Callback<G> {
+
+        private final UseCase.Callback<G> mCallback;
+        private final UseCaseHandler mUseCaseHandler;
+
+        public UiProgressCallbackWrapper(UseCase.Callback<G> mCallback,
+                                         UseCaseHandler mUseCaseHandler) {
+            this.mCallback = mCallback;
+            this.mUseCaseHandler = mUseCaseHandler;
+        }
+
+        @Override
+        public void call(G progressValue) {
+            mUseCaseHandler.notifyProgress(progressValue, mCallback);
         }
     }
 
