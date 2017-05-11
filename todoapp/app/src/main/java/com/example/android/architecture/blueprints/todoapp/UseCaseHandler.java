@@ -59,7 +59,7 @@ public class UseCaseHandler {
         useCase.setRequestValues(values);
         useCase.setSuccessCallback(new UiSuccessCallbackWrapper<>(successCallback, this));
         useCase.setErrorCallback(new UiErrorCallbackWrapper<>(errorCallback, this));
-        useCase.setmProgressCallback(new UiProgressCallbackWrapper<>(progressCallback, this));
+        useCase.setProgressCallback(new UiProgressCallbackWrapper<>(progressCallback, this));
 
         // The network request might be handled in a different thread so make sure
         // Espresso knows

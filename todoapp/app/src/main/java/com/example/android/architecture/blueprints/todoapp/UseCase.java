@@ -64,7 +64,7 @@ public abstract class UseCase<
         return mProgressCallback;
     }
 
-    public void setmProgressCallback(Callback<G> progressCallback) {
+    public void setProgressCallback(Callback<G> progressCallback) {
         this.mProgressCallback = progressCallback;
     }
 
